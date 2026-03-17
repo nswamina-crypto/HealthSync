@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HealthSync Pro | Clinical Dashboard</title>
     <script>
-        // Global variable to simulate IP persistence
-        let currentAllowedIP = "103.23.29.116"; 
+        let currentAllowedIP = "103.23.29.112"; 
 
         async function checkIPv4() {
             try {
@@ -14,7 +13,6 @@
                 const data = await response.json();
                 const visitorIP = data.ip;
 
-                // Update the debug display in the restricted screen if it exists
                 if (visitorIP.trim() !== currentAllowedIP.trim()) {
                     showRestrictedScreen(visitorIP);
                 } else {
@@ -32,7 +30,6 @@
                         <img src="logo.png" alt="HealthSync Logo" style="width: 180px; margin-bottom: 20px;">
                         <h2 style="color: #334155;">🔒 Access Restricted</h2>
                         <p style="color: #64748b;">Unauthorized Network Detected: <b>${ip}</b></p>
-                        <p style="font-size: 0.8rem; color: #94a3b8;">Please update the <b>allowedIP</b> variable in the code with the numbers above.</p>
                     </div>
                 </div>`;
         }
@@ -44,153 +41,144 @@
             }, 3000); 
         }
 
+        // Lightbox Functions
+        function openLightbox(src) {
+            const lightbox = document.getElementById('lightbox');
+            const lightboxImg = document.getElementById('lightbox-img');
+            lightboxImg.src = src;
+            lightbox.style.display = 'flex';
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox').style.display = 'none';
+        }
+
         window.onload = checkIPv4;
     </script>
     <style>
-        :root { --primary: #1e40af; --accent: #00d2d3; --bg: #f8fafc; --border: #e2e8f0; --text: #1e293b; }
-        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); margin: 0; color: var(--text); }
+        :root { --primary: #1e40af; --accent: #00d2d3; --bg: #f8fafc; --border: #e2e8f0; --text: #1e293b; --danger: #991b1b; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); margin: 0; color: var(--text); line-height: 1.5; }
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
         
-        /* Navbar */
         .navbar { background: white; border-bottom: 1px solid var(--border); padding: 10px 0; position: sticky; top: 0; z-index: 100; }
         .nav-content { display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; padding: 0 20px; }
         .logo-img { height: 45px; vertical-align: middle; }
         
-        /* Loading Overlay */
-        #loading-overlay { 
-            position: fixed; inset: 0; background: #fff; 
-            display: flex; flex-direction: column; justify-content: center; align-items: center; 
-            z-index: 1000;
-        }
+        .card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .patient-header-flex { display: flex; align-items: center; gap: 25px; border-bottom: 1px solid #f1f5f9; padding-bottom: 20px; margin-bottom: 20px; }
+        .patient-photo { width: 110px; height: 110px; border-radius: 12px; object-fit: cover; border: 3px solid #f1f5f9; }
+        
+        /* Imaging Grid */
+        .imaging-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px; }
+        .imaging-item { background: #000; border-radius: 8px; padding: 10px; text-align: center; color: white; border: 1px solid #334155; cursor: zoom-in; position: relative; }
+        .imaging-item img { width: 100%; height: 180px; object-fit: cover; border-radius: 4px; margin-bottom: 8px; filter: grayscale(100%); transition: 0.3s; }
+        .imaging-item:hover img { filter: grayscale(0%); opacity: 0.8; }
+        .imaging-item::after { content: '🔍 View Full'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0; transition: 0.3s; font-size: 0.8rem; font-weight: bold; }
+        .imaging-item:hover::after { opacity: 1; }
+        .imaging-label { font-size: 0.7rem; font-weight: bold; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.5px; }
+
+        /* Lightbox Overlay */
+        #lightbox { display: none; position: fixed; z-index: 2000; inset: 0; background: rgba(0,0,0,0.9); justify-content: center; align-items: center; cursor: pointer; }
+        #lightbox-img { max-width: 90%; max-height: 90%; border: 2px solid white; border-radius: 4px; }
+
+        .allergy-badge { background: #fee2e2; color: var(--danger); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; border: 1px solid #fecdd3; display: inline-block; margin-top: 10px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { text-align: left; font-size: 0.7rem; color: #64748b; padding: 12px; border-bottom: 2px solid var(--border); text-transform: uppercase; }
+        td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; }
+        
+        .clinical-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+        #loading-overlay { position: fixed; inset: 0; background: #fff; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000; }
         .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* Cards & UI Elements */
-        .card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-        .patient-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 15px; }
-        
-        .patient-meta { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
-        .meta-item { font-size: 0.85rem; }
-        .meta-label { color: #64748b; display: block; font-size: 0.7rem; text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
-        
-        /* Tables */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { text-align: left; font-size: 0.75rem; color: #64748b; padding: 12px; border-bottom: 2px solid var(--border); }
-        td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
-        
-        /* Layout */
-        .clinical-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
-        .emergency-card { background: #fff1f2; border: 1px solid #fecdd3; border-radius: 10px; padding: 15px; border-left: 4px solid #e11d48; }
-        
-        /* UI Controls Section */
-        .ui-controls { background: #f1f5f9; padding: 10px 15px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 15px; font-size: 0.85rem; }
-        .btn { background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: 600; }
-        .btn:hover { opacity: 0.9; }
     </style>
 </head>
 <body>
 
+    <div id="lightbox" onclick="closeLightbox()">
+        <img id="lightbox-img" src="" alt="Full Resolution Scan">
+        <div style="position: absolute; top: 20px; right: 30px; color: white; font-size: 2rem;">&times;</div>
+    </div>
+
     <div id="loading-overlay">
-        <img src="logo.png" alt="HealthSync Logo" style="width: 150px; margin-bottom: 25px;">
+        <img src="logo.png" alt="HealthSync" style="width: 150px; margin-bottom: 25px;">
         <div class="spinner"></div>
-        <p style="margin-top: 20px; font-weight: 600; color: var(--primary); letter-spacing: 1px;">VERIFYING CLINICAL ACCESS...</p>
-        <p style="font-size: 0.8rem; color: #94a3b8;">Encrypted Handshake in progress...</p>
+        <p style="margin-top: 20px; font-weight: 600; color: var(--primary);">DECRYPTING CLINICAL DATA...</p>
     </div>
 
     <div id="main-content" style="display:none;">
         <div class="navbar">
             <div class="nav-content">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <img src="logo.png" class="logo-img" alt="HealthSync">
-                </div>
-                <div style="font-size: 0.8rem; color: #16a34a; font-weight: bold; background: #f0fdf4; padding: 5px 10px; border-radius: 20px;">
-                    ● SECURE CLINICAL NODE
-                </div>
+                <img src="logo.png" class="logo-img">
+                <div style="font-size: 0.8rem; color: #16a34a; font-weight: bold;">● SECURE CLINICAL NODE</div>
             </div>
         </div>
 
         <div class="container">
-            <div class="ui-controls">
-                <strong>Admin Console:</strong>
-                <span>Network Status: <span style="color: green;">Verified</span></span>
-                <span>|</span>
-                <button class="btn" onclick="location.reload()">Refresh Data</button>
-                <button class="btn" style="background:#64748b" onclick="alert('Session logged. Access will expire in 20 minutes.')">Extend Session</button>
-            </div>
-
             <div class="card" style="border-top: 6px solid var(--primary);">
-                <div class="patient-header">
-                    <div>
-                        <h1 style="margin:0; font-size: 1.8rem; letter-spacing: -0.5px;">JOHNSON, Robert D.</h1>
-                        <p style="margin: 5px 0 0; color: #64748b;">Patient ID: #HS-9921 • Male • 40 Years Old</p>
-                    </div>
-                    <div style="background: #fee2e2; color: #991b1b; padding: 8px 15px; border-radius: 6px; font-weight: bold; font-size: 0.85rem;">
-                        ⚠️ Allergy: Penicillin
+                <div class="patient-header-flex">
+                    <img src="image.jpg" class="patient-photo" onerror="this.src='https://via.placeholder.com/110?text=Patient'">
+                    <div style="flex-grow: 1;">
+                        <h1 style="margin:0; font-size: 1.8rem;">Muthuswami Iyer</h1>
+                        <p style="margin: 5px 0 0; color: #64748b;">ID: #HS-9921 • Male • 40 Years Old</p>
+                        <span class="allergy-badge">⚠️ ALLERGY: PENICILLIN</span>
                     </div>
                 </div>
-
-                <div class="patient-meta">
-                    <div class="meta-item"><span class="meta-label">Blood Group</span><strong>O Positive (O+)</strong></div>
-                    <div class="meta-item"><span class="meta-label">Height / Weight</span><strong>182 cm / 84.5 kg</strong></div>
-                    <div class="meta-item"><span class="meta-label">BMI Status</span><strong>25.5 (Normal)</strong></div>
-                    <div class="meta-item"><span class="meta-label">Primary Facility</span><strong>Central General</strong></div>
+                <div class="patient-meta" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
+                    <div><span style="font-size: 0.7rem; color: #64748b; text-transform: uppercase;">Blood Group</span><br><strong>O Positive (O+)</strong></div>
+                    <div><span style="font-size: 0.7rem; color: #64748b; text-transform: uppercase;">Height/Weight</span><br><strong>182 cm / 84.5 kg</strong></div>
+                    <div><span style="font-size: 0.7rem; color: #64748b; text-transform: uppercase;">BMI</span><br><strong>25.5 (Normal)</strong></div>
+                    <div><span style="font-size: 0.7rem; color: #64748b; text-transform: uppercase;">Primary Facility</span><br><strong>St.Mary's Hospital</strong></div>
                 </div>
             </div>
 
             <div class="clinical-layout">
                 <div class="left-col">
                     <div class="card">
-                        <h2 style="font-size: 1.1rem; color: var(--primary); margin-top: 0;">🩸 Lab Panels (Last 12 Months)</h2>
-                        <table>
-                            <thead>
-                                <tr><th>Test Date</th><th>Component</th><th>Result</th><th>Status</th></tr>
-                            </thead>
-                            <tbody>
-                                <tr><td>03/10/2026</td><td>Glucose (Fasting)</td><td>106 mg/dL</td><td style="color:#dc2626; font-weight:bold;">HIGH</td></tr>
-                                <tr><td>03/10/2026</td><td>Hemoglobin</td><td>14.2 g/dL</td><td style="color:#16a34a;">NORMAL</td></tr>
-                                <tr><td>01/15/2026</td><td>Cholesterol (Total)</td><td>210 mg/dL</td><td style="color:#dc2626; font-weight:bold;">HIGH</td></tr>
-                                <tr><td>01/15/2026</td><td>Platelets</td><td>240 K/uL</td><td style="color:#16a34a;">NORMAL</td></tr>
-                            </tbody>
-                        </table>
+                        <h2 style="font-size: 1.1rem; color: var(--primary); margin-top: 0;">🩻 Diagnostic Imaging</h2>
+                        <div class="imaging-grid">
+                            <div class="imaging-item" onclick="openLightbox('mri.png')">
+                                <img src="mri.png" alt="Head MRI">
+                                <div class="imaging-label">Head MRI (Axial) - 03/10/26</div>
+                            </div>
+                            <div class="imaging-item" onclick="openLightbox('xray.png')">
+                                <img src="xray.png" alt="Left Leg X-Ray">
+                                <div class="imaging-label">Left Leg X-Ray (Lateral) - 03/10/26</div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="card">
-                        <h2 style="font-size: 1.1rem; color: var(--primary); margin-top: 0;">🩻 Imaging & Radiology</h2>
+                        <h2 style="font-size: 1.1rem; color: var(--primary); margin-top: 0;">🏥 Previous Hospital Visits</h2>
                         <table>
                             <thead>
-                                <tr><th>Study Date</th><th>Procedure</th><th>Key Findings</th></tr>
+                                <tr><th>Date</th><th>Facility</th><th>Reason</th><th>Status</th></tr>
                             </thead>
                             <tbody>
-                                <tr><td>03/10/2026</td><td><b>Chest X-Ray</b></td><td>Lungs clear. Heart size normal.</td></tr>
-                                <tr><td>12/15/2025</td><td><b>CT Abdomen</b></td><td>Mild fatty liver infiltration.</td></tr>
-                                <tr><td>08/20/2025</td><td><b>MRI Spine</b></td><td>L5-S1 disc protrusion noted.</td></tr>
+                                <tr><td>03/10/2026</td><td>St.Mary's Hospital</td><td>Acute Leg Trauma / Migraine</td><td>In-Progress</td></tr>
+                                <tr><td>01/15/2026</td><td>Central General</td><td>Routine Lab Panels</td><td>Completed</td></tr>
+                                <tr><td>11/20/2025</td><td>St.Mary's Hospital</td><td>Fever / Seasonal Flu</td><td>Resolved</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
 
                 <div class="right-col">
-                    <div class="emergency-card" style="margin-bottom: 20px;">
-                        <h3 style="margin: 0 0 10px; color: #9f1239; font-size: 0.85rem; text-transform: uppercase;">🚨 Emergency Contacts</h3>
-                        <div style="font-size: 0.9rem;">
-                            <strong>Sarah Johnson</strong> (Spouse)<br>
-                            <span style="color:#64748b">Ph: +1 (555) 012-3456</span>
-                            <hr style="border: 0; border-top: 1px solid #fecdd3; margin: 10px 0;">
-                            <strong>Dr. Alan Grant</strong> (PCP)<br>
-                            <span style="color:#64748b">Ph: +1 (555) 999-8888</span>
-                        </div>
+                    <div class="card">
+                        <h2 style="font-size: 1rem; color: var(--primary); margin-top: 0;">🩸 Lab Panels</h2>
+                        <table>
+                            <tbody>
+                                <tr><td>Glucose</td><td style="color:#dc2626; font-weight:bold;">106 (H)</td></tr>
+                                <tr><td>Hemoglobin</td><td>14.2</td></tr>
+                                <tr><td>Cholesterol</td><td style="color:#dc2626; font-weight:bold;">210 (H)</td></tr>
+                            </tbody>
+                        </table>
                     </div>
 
                     <div class="card">
-                        <h2 style="font-size: 1rem; color: var(--primary); margin-top: 0;">💊 Current Meds</h2>
-                        <div style="border-left: 3px solid #bfdbfe; padding-left: 10px; margin-bottom: 15px;">
-                            <strong style="font-size: 0.9rem;">Lisinopril 5mg</strong><br>
-                            <small style="color: #64748b;">Hypertension • 1x Daily (AM)</small>
-                        </div>
-                        <div style="border-left: 3px solid #bfdbfe; padding-left: 10px;">
-                            <strong style="font-size: 0.9rem;">Atorvastatin 20mg</strong><br>
-                            <small style="color: #64748b;">Lipids • 1x Nightly (PM)</small>
-                        </div>
+                        <h2 style="font-size: 1rem; color: var(--primary); margin-top: 0;">💊 Meds</h2>
+                        <p style="font-size: 0.85rem; margin-bottom: 8px;"><strong>Lisinopril 5mg</strong> (1x AM)</p>
+                        <p style="font-size: 0.85rem;"><strong>Atorvastatin 20mg</strong> (1x PM)</p>
                     </div>
                 </div>
             </div>
