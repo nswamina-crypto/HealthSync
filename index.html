@@ -5,109 +5,142 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HealthSync Pro | Clinical Dashboard</title>
     <script>
-        async function checkIPv4() {
-            // STEP 1: Ensure your IP is correct here
-            const allowedIP = "103.23.29.117"; 
+        // Global variable to simulate IP persistence
+        let currentAllowedIP = "103.23.29.116"; 
 
+        async function checkIPv4() {
             try {
                 const response = await fetch('https://api4.ipify.org?format=json');
                 const data = await response.json();
                 const visitorIP = data.ip;
 
-                if (visitorIP.trim() !== allowedIP.trim()) {
-                    document.body.innerHTML = `
-                        <div style="display:flex; justify-content:center; align-items:center; height:100vh; font-family: sans-serif; background-color: #f8fafc;">
-                            <div style="text-align:center; padding: 50px; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); max-width: 500px; border-top: 5px solid #1e40af;">
-                                <div style="color: #1e40af; font-size: 28px; font-weight: 800; margin-bottom: 10px;">HealthSync</div>
-                                <h2 style="color: #334155;">🔒 Access Restricted</h2>
-                                <p style="color: #64748b;">Unauthorized Network Detected: <b>${visitorIP}</b></p>
-                            </div>
-                        </div>`;
+                // Update the debug display in the restricted screen if it exists
+                if (visitorIP.trim() !== currentAllowedIP.trim()) {
+                    showRestrictedScreen(visitorIP);
                 } else {
-                    // STEP 2: The 3-second "Verifying" delay
-                    setTimeout(() => {
-                        document.getElementById('loading-overlay').style.display = 'none';
-                        document.getElementById('main-content').style.display = 'block';
-                    }, 3000); 
+                    startLoadingSequence();
                 }
             } catch (error) {
                 document.body.innerHTML = "<div style='text-align:center; margin-top:100px;'><h1>Network Error</h1></div>";
             }
         }
+
+        function showRestrictedScreen(ip) {
+            document.body.innerHTML = `
+                <div style="display:flex; justify-content:center; align-items:center; height:100vh; font-family: sans-serif; background-color: #f8fafc;">
+                    <div style="text-align:center; padding: 50px; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); max-width: 500px; border-top: 5px solid #1e40af;">
+                        <img src="logo.png" alt="HealthSync Logo" style="width: 180px; margin-bottom: 20px;">
+                        <h2 style="color: #334155;">🔒 Access Restricted</h2>
+                        <p style="color: #64748b;">Unauthorized Network Detected: <b>${ip}</b></p>
+                        <p style="font-size: 0.8rem; color: #94a3b8;">Please update the <b>allowedIP</b> variable in the code with the numbers above.</p>
+                    </div>
+                </div>`;
+        }
+
+        function startLoadingSequence() {
+            setTimeout(() => {
+                document.getElementById('loading-overlay').style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
+            }, 3000); 
+        }
+
         window.onload = checkIPv4;
     </script>
     <style>
-        :root { --primary: #1e40af; --bg: #f8fafc; --border: #e2e8f0; --text: #1e293b; }
+        :root { --primary: #1e40af; --accent: #00d2d3; --bg: #f8fafc; --border: #e2e8f0; --text: #1e293b; }
         body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); margin: 0; color: var(--text); }
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
         
         /* Navbar */
-        .navbar { background: white; border-bottom: 1px solid var(--border); padding: 15px 0; margin-bottom: 25px; }
+        .navbar { background: white; border-bottom: 1px solid var(--border); padding: 10px 0; position: sticky; top: 0; z-index: 100; }
         .nav-content { display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .logo-img { height: 45px; vertical-align: middle; }
         
         /* Loading Overlay */
         #loading-overlay { 
             position: fixed; inset: 0; background: #fff; 
             display: flex; flex-direction: column; justify-content: center; align-items: center; 
-            z-index: 1000; font-family: sans-serif;
+            z-index: 1000;
         }
         .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Content Styles */
-        .card { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 20px; }
-        .patient-meta { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 15px; padding-top: 15px; border-top: 1px solid #f1f5f9; }
-        .meta-item { font-size: 0.85rem; }
-        .meta-label { color: #64748b; display: block; font-size: 0.7rem; text-transform: uppercase; font-weight: 700; }
+        /* Cards & UI Elements */
+        .card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .patient-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 15px; }
         
-        table { width: 100%; border-collapse: collapse; }
+        .patient-meta { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+        .meta-item { font-size: 0.85rem; }
+        .meta-label { color: #64748b; display: block; font-size: 0.7rem; text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
+        
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th { text-align: left; font-size: 0.75rem; color: #64748b; padding: 12px; border-bottom: 2px solid var(--border); }
         td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
         
+        /* Layout */
         .clinical-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
-        .emergency-card { background: #fff1f2; border: 1px solid #fecdd3; border-radius: 10px; padding: 15px; }
+        .emergency-card { background: #fff1f2; border: 1px solid #fecdd3; border-radius: 10px; padding: 15px; border-left: 4px solid #e11d48; }
+        
+        /* UI Controls Section */
+        .ui-controls { background: #f1f5f9; padding: 10px 15px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 15px; font-size: 0.85rem; }
+        .btn { background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: 600; }
+        .btn:hover { opacity: 0.9; }
     </style>
 </head>
 <body>
 
     <div id="loading-overlay">
+        <img src="logo.png" alt="HealthSync Logo" style="width: 150px; margin-bottom: 25px;">
         <div class="spinner"></div>
         <p style="margin-top: 20px; font-weight: 600; color: var(--primary); letter-spacing: 1px;">VERIFYING CLINICAL ACCESS...</p>
-        <p style="font-size: 0.8rem; color: #94a3b8;">Establishing secure connection to HealthSync Node...</p>
+        <p style="font-size: 0.8rem; color: #94a3b8;">Encrypted Handshake in progress...</p>
     </div>
 
     <div id="main-content" style="display:none;">
         <div class="navbar">
             <div class="nav-content">
-                <div style="font-size: 1.5rem; font-weight: 900; color: var(--primary);">HealthSync <span style="font-weight:100; color:#64748b;">Clinical</span></div>
-                <div style="font-size: 0.8rem; color: #16a34a; font-weight: bold;">● SYSTEM SECURE</div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <img src="logo.png" class="logo-img" alt="HealthSync">
+                </div>
+                <div style="font-size: 0.8rem; color: #16a34a; font-weight: bold; background: #f0fdf4; padding: 5px 10px; border-radius: 20px;">
+                    ● SECURE CLINICAL NODE
+                </div>
             </div>
         </div>
 
         <div class="container">
-            <div class="card" style="border-top: 5px solid var(--primary);">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div class="ui-controls">
+                <strong>Admin Console:</strong>
+                <span>Network Status: <span style="color: green;">Verified</span></span>
+                <span>|</span>
+                <button class="btn" onclick="location.reload()">Refresh Data</button>
+                <button class="btn" style="background:#64748b" onclick="alert('Session logged. Access will expire in 20 minutes.')">Extend Session</button>
+            </div>
+
+            <div class="card" style="border-top: 6px solid var(--primary);">
+                <div class="patient-header">
                     <div>
-                        <h1 style="margin:0; font-size: 1.8rem;">JOHNSON, Robert D.</h1>
+                        <h1 style="margin:0; font-size: 1.8rem; letter-spacing: -0.5px;">JOHNSON, Robert D.</h1>
                         <p style="margin: 5px 0 0; color: #64748b;">Patient ID: #HS-9921 • Male • 40 Years Old</p>
                     </div>
-                    <div style="background: #fee2e2; color: #991b1b; padding: 8px 15px; border-radius: 6px; font-weight: bold; font-size: 0.9rem;">
+                    <div style="background: #fee2e2; color: #991b1b; padding: 8px 15px; border-radius: 6px; font-weight: bold; font-size: 0.85rem;">
                         ⚠️ Allergy: Penicillin
                     </div>
                 </div>
 
                 <div class="patient-meta">
                     <div class="meta-item"><span class="meta-label">Blood Group</span><strong>O Positive (O+)</strong></div>
-                    <div class="meta-item"><span class="meta-label">Height</span><strong>182 cm</strong></div>
-                    <div class="meta-item"><span class="meta-label">Weight</span><strong>84.5 kg</strong></div>
-                    <div class="meta-item"><span class="meta-label">BMI</span><strong>25.5 (Normal)</strong></div>
+                    <div class="meta-item"><span class="meta-label">Height / Weight</span><strong>182 cm / 84.5 kg</strong></div>
+                    <div class="meta-item"><span class="meta-label">BMI Status</span><strong>25.5 (Normal)</strong></div>
+                    <div class="meta-item"><span class="meta-label">Primary Facility</span><strong>Central General</strong></div>
                 </div>
             </div>
 
             <div class="clinical-layout">
                 <div class="left-col">
                     <div class="card">
-                        <h2 style="font-size: 1.1rem; color: var(--primary);">🩸 Laboratory Results (Blood Panel)</h2>
+                        <h2 style="font-size: 1.1rem; color: var(--primary); margin-top: 0;">🩸 Lab Panels (Last 12 Months)</h2>
                         <table>
                             <thead>
                                 <tr><th>Test Date</th><th>Component</th><th>Result</th><th>Status</th></tr>
@@ -122,7 +155,7 @@
                     </div>
 
                     <div class="card">
-                        <h2 style="font-size: 1.1rem; color: var(--primary);">🩻 Radiology & Diagnostic Imaging</h2>
+                        <h2 style="font-size: 1.1rem; color: var(--primary); margin-top: 0;">🩻 Imaging & Radiology</h2>
                         <table>
                             <thead>
                                 <tr><th>Study Date</th><th>Procedure</th><th>Key Findings</th></tr>
@@ -138,20 +171,26 @@
 
                 <div class="right-col">
                     <div class="emergency-card" style="margin-bottom: 20px;">
-                        <h3 style="margin: 0 0 10px; color: #9f1239; font-size: 0.9rem; text-transform: uppercase;">🚨 Emergency Contacts</h3>
+                        <h3 style="margin: 0 0 10px; color: #9f1239; font-size: 0.85rem; text-transform: uppercase;">🚨 Emergency Contacts</h3>
                         <div style="font-size: 0.9rem;">
                             <strong>Sarah Johnson</strong> (Spouse)<br>
-                            Phone: +1 (555) 012-3456<br>
+                            <span style="color:#64748b">Ph: +1 (555) 012-3456</span>
                             <hr style="border: 0; border-top: 1px solid #fecdd3; margin: 10px 0;">
-                            <strong>Dr. Alan Grant</strong> (Primary Care)<br>
-                            Phone: +1 (555) 999-8888
+                            <strong>Dr. Alan Grant</strong> (PCP)<br>
+                            <span style="color:#64748b">Ph: +1 (555) 999-8888</span>
                         </div>
                     </div>
 
                     <div class="card">
-                        <h2 style="font-size: 1.1rem; color: var(--primary);">💊 Medications</h2>
-                        <p style="font-size: 0.9rem;"><b>Lisinopril 5mg</b><br><small>Started: 11/2025 • 1x Daily</small></p>
-                        <p style="font-size: 0.9rem;"><b>Atorvastatin 20mg</b><br><small>Started: 01/2026 • 1x Nightly</small></p>
+                        <h2 style="font-size: 1rem; color: var(--primary); margin-top: 0;">💊 Current Meds</h2>
+                        <div style="border-left: 3px solid #bfdbfe; padding-left: 10px; margin-bottom: 15px;">
+                            <strong style="font-size: 0.9rem;">Lisinopril 5mg</strong><br>
+                            <small style="color: #64748b;">Hypertension • 1x Daily (AM)</small>
+                        </div>
+                        <div style="border-left: 3px solid #bfdbfe; padding-left: 10px;">
+                            <strong style="font-size: 0.9rem;">Atorvastatin 20mg</strong><br>
+                            <small style="color: #64748b;">Lipids • 1x Nightly (PM)</small>
+                        </div>
                     </div>
                 </div>
             </div>
